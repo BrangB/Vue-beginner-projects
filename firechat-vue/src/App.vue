@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Login view -->
-    <div class="view login" v-if="state.username === '' || state.username === null">
+    <div class="view login" v-if="state.username === '' || state.username === null || isLoggedIn">
       <form class="login-form" @submit.prevent="login">
         <div class="form-inner">
           <h1>Login to FireChat</h1>
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed  } from 'vue';
 import db from './db'; // Ensure your Firebase db is imported correctly
 
 export default {
@@ -58,6 +58,7 @@ export default {
       if (inputUsername.value.trim() !== '') {
         state.username = inputUsername.value.trim();
         inputUsername.value = '';
+        localStorage.setItem('username', state.username);
       }
     };
 
@@ -83,6 +84,10 @@ export default {
 
     // Fetch messages on component mount
     onMounted(() => {
+      const storedUsername = localStorage.getItem('username');
+      if (storedUsername) {
+        state.username = storedUsername;
+      }
       const messagesRef = db.ref('messages');
       messagesRef.on('value', (snapshot) => {
         state.messages = [];
@@ -90,6 +95,9 @@ export default {
           state.messages.push(childSnapshot.val());
         });
       });
+    });
+    const isLoggedIn = computed(() => {
+      return state.username !== '';
     });
 
     return {
